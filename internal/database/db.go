@@ -23,7 +23,7 @@ func Connect() {
 		fmt.Println("Error parsing str to int")
 	}
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=require TimeZone=Asia/Shanghai", utils.Config("DB_HOST"), utils.Config("DB_USER"), utils.Config("DB_PASSWORD"), utils.Config("DB_NAME"), port)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai", utils.Config("DB_HOST"), utils.Config("DB_USER"), utils.Config("DB_PASSWORD"), utils.Config("DB_NAME"), port)
 
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
@@ -49,7 +49,23 @@ func Connect() {
 
 func runMigrations(db *sqlx.DB) {
 	_, err := db.Exec(`
-		CREATE TABLE test (test VARCHAR(255));
+
+		CREATE TABLE IF NOT EXISTS questions (
+			id UUID PRIMARY KEY,
+			question TEXT NOT NULL,
+			test_case_id UUID[],
+			set INT NOT NULL,
+			difficulty VARCHAR(255) NOT NULL
+		
+		);
+		
+		CREATE TABLE IF NOT EXISTS test_cases (
+			id UUID PRIMARY KEY,
+			input TEXT NOT NULL,
+			output TEXT NOT NULL,
+			question_id UUID REFERENCES questions(id)
+		);
+
 	`)
 
 	if err != nil {
