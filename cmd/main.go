@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-    "github.com/siam-vit/coding-relay-be/internal/database"
 	"github.com/labstack/echo/v4"
+	"github.com/siam-vit/coding-relay-be/internal/database"
 )
 
 func main() {
