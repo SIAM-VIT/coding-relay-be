@@ -31,3 +31,15 @@ func CreateTeam(c echo.Context) error {
 	})
 
 }
+
+
+func GetAllTeams(c echo.Context) error {
+	teams, err := services.GetAllTeams()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": "Failed to fetch teams",
+			"data":    err.Error(),
+		})
+	}
+	return c.JSON(http.StatusOK, teams)
+}
