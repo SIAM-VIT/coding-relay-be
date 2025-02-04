@@ -1,6 +1,8 @@
 package services
 
 import (
+	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/siam-vit/coding-relay-be/internal/database"
 	"github.com/siam-vit/coding-relay-be/internal/models"
 )
@@ -9,9 +11,9 @@ func CreateQuestion(question models.Question) error {
 	db := database.DB.Db
 
 	_, err := db.Exec(`
-		INSERT INTO questions (question, test_case_id, set, difficulty)
-		VALUES ($1, $2, $3, $4)`,
-		question.Question, question.TestCaseID, question.Set, question.Difficulty)
+		INSERT INTO questions ( question, set, difficulty)
+		VALUES ($1, $2, $3)`,
+		question.Question, question.Set, question.Difficulty)
 	return err
 }
 
@@ -27,10 +29,25 @@ func GetQuestionsByDifficulty(difficulty string) ([]models.Question, error) {
 
 	for rows.Next() {
 		var q models.Question
-		err := rows.Scan(&q.ID, &q.Question, &q.TestCaseID, &q.Set, &q.Difficulty)
+		var testCaseIDs pq.StringArray 
+
+		err := rows.Scan(&q.ID, &q.Question, &testCaseIDs, &q.Set, &q.Difficulty)
 		if err != nil {
 			return nil, err
 		}
+
+		if len(testCaseIDs) == 0 {
+			q.TestCaseID = []uuid.UUID{}
+		} else {
+			for _, id := range testCaseIDs {
+				parsedID, err := uuid.Parse(id)
+				if err != nil {
+					return nil, err
+				}
+				q.TestCaseID = append(q.TestCaseID, parsedID)
+			}
+		}
+
 		questions = append(questions, q)
 	}
 	return questions, nil

@@ -52,7 +52,7 @@ func runMigrations(db *sqlx.DB) {
 	_, err := db.Exec(`
 
 		CREATE TABLE IF NOT EXISTS questions (
-			id UUID PRIMARY KEY,
+			id SERIAL PRIMARY KEY,  
 			question TEXT NOT NULL,
 			test_case_id UUID[],
 			set INT NOT NULL,
@@ -64,7 +64,7 @@ func runMigrations(db *sqlx.DB) {
 			id UUID PRIMARY KEY,
 			input TEXT NOT NULL,
 			output TEXT NOT NULL,
-			question_id UUID REFERENCES questions(id)
+			question_id INTEGER REFERENCES questions(id)
 		);
 
 		CREATE TABLE IF NOT EXISTS teams (
