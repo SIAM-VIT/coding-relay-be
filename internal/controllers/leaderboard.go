@@ -3,6 +3,7 @@ package controllers
 import (
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -104,13 +105,15 @@ func StartTimer(c echo.Context) error {
 func GetTimeLeft(c echo.Context) error {
 	if utils.GlobalTimer == nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "Timer has not been started yet",
+			"error":  "Timer has not been started yet",
+			"status": "false",
 		})
 	}
 
-	remainingTime := utils.GlobalTimer.TimeLeft()
-
-	return c.JSON(http.StatusOK, map[string]int{
-		"time_left": remainingTime / 1000000000,
+	remainingTime := utils.GlobalTimer.TimeLeft() / 1000000000
+	strTime := strconv.Itoa(remainingTime)
+	return c.JSON(http.StatusOK, map[string]string{
+		"time_left": strTime,
+		"status":    "true",
 	})
 }
