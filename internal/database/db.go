@@ -5,9 +5,10 @@ import (
 	"log"
 	"os"
 	"strconv"
-    "github.com/siam-vit/coding-relay-be/internal/utils"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // Import the PostgreSQL driver
+	"github.com/siam-vit/coding-relay-be/internal/utils"
 )
 
 type Dbinstance struct {
@@ -64,6 +65,13 @@ func runMigrations(db *sqlx.DB) {
 			input TEXT NOT NULL,
 			output TEXT NOT NULL,
 			question_id UUID REFERENCES questions(id)
+		);
+
+		CREATE TABLE IF NOT EXISTS teams (
+			team_id UUID PRIMARY KEY,
+			team_name VARCHAR(255) NOT NULL,
+			team_members TEXT[] NOT NULL,
+			score INT NOT NULL
 		);
 
 	`)
