@@ -10,8 +10,8 @@ import (
 func main() {
 	database.Connect()
 	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"message": "Hello, Echo!"})
+	e.GET("/ping", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{"message": "pong"})
 	})
 	e.Start(":8080")
 }
