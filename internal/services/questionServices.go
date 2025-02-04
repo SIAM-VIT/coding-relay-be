@@ -29,7 +29,7 @@ func GetQuestionsByDifficulty(difficulty string) ([]models.Question, error) {
 
 	for rows.Next() {
 		var q models.Question
-		var testCaseIDs pq.StringArray 
+		var testCaseIDs pq.StringArray
 
 		err := rows.Scan(&q.ID, &q.Question, &testCaseIDs, &q.Set, &q.Difficulty)
 		if err != nil {
@@ -57,9 +57,9 @@ func CreateTestCase(testCase models.TestCases) error {
 	db := database.DB.Db
 
 	_, err := db.Exec(`
-		INSERT INTO test_cases (input, output, question_id)
-		VALUES ($1, $2, $3)`,
-		testCase.Input, testCase.Output, testCase.QuestionID)
+		INSERT INTO test_cases (id, input, output, question_id)
+		VALUES ($1, $2, $3, $4)`,
+		uuid.New(), testCase.Input, testCase.Output, testCase.QuestionID)
 	return err
 }
 
