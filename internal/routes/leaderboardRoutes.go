@@ -10,4 +10,7 @@ func LeaderBoardRoutes(e *echo.Echo) {
 	r.POST("/addPoints/:id", controllers.AddPoints)
 	r.PUT("/modifyPoints/:id", controllers.ModifyPoints)
 
+	r.POST("/startTimer", controllers.StartTimer)
+	r.GET("/getTimer", controllers.GetTimeLeft)
+
 }

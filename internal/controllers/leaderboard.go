@@ -1,11 +1,14 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/siam-vit/coding-relay-be/internal/services"
+	"github.com/siam-vit/coding-relay-be/internal/utils"
 )
 
 func AddPoints(c echo.Context) error {
@@ -77,5 +80,37 @@ func ModifyPoints(c echo.Context) error {
 		"message": "Successfully added points",
 		"data":    "Successfully added points",
 		"status":  "true",
+	})
+}
+
+func StartTimer(c echo.Context) error {
+	var input struct {
+		Timer float64 `json:"timer"`
+	}
+
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid input",
+		})
+	}
+	utils.CreateTimer(time.Hour * time.Duration(input.Timer))
+
+	log.Println("Timer started")
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "Successfully started timer",
+	})
+}
+
+func GetTimeLeft(c echo.Context) error {
+	if utils.GlobalTimer == nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Timer has not been started yet",
+		})
+	}
+
+	remainingTime := utils.GlobalTimer.TimeLeft()
+
+	return c.JSON(http.StatusOK, map[string]int{
+		"time_left": remainingTime / 1000000000,
 	})
 }
