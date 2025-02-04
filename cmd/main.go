@@ -17,5 +17,6 @@ func main() {
 
 	routes.TeamRoutes(e)
 	routes.QuestionRoutes(e)
+	routes.LeaderBoardRoutes(e)
 	e.Start(":8080")
 }
