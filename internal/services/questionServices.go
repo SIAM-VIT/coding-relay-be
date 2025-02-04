@@ -39,8 +39,9 @@ func GetQuestionsByDifficulty(difficulty string) ([]models.Question, error) {
 		var diff string
 		var testCaseID *uint
 		var input, output *string
+		var tQuestionID *uint 
 
-		err := rows.Scan(&qID, &qText, &set, &diff, &testCaseID, &input, &output, &qID)
+		err := rows.Scan(&qID, &qText, &set, &diff, &testCaseID, &input, &output, &tQuestionID)
 		if err != nil {
 			return nil, err
 		}
@@ -55,12 +56,12 @@ func GetQuestionsByDifficulty(difficulty string) ([]models.Question, error) {
 			}
 		}
 
-		if testCaseID != nil && input != nil && output != nil {
+		if testCaseID != nil && input != nil && output != nil && tQuestionID != nil {
 			questionsMap[qID].TestCases = append(questionsMap[qID].TestCases, models.TestCases{
 				ID:         *testCaseID,
 				Input:      *input,
 				Output:     *output,
-				QuestionID: qID,
+				QuestionID: *tQuestionID, 
 			})
 		}
 	}
