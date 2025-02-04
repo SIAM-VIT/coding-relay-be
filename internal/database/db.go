@@ -24,7 +24,7 @@ func Connect() {
 		fmt.Println("Error parsing str to int")
 	}
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai", utils.Config("DB_HOST"), utils.Config("DB_USER"), utils.Config("DB_PASSWORD"), utils.Config("DB_NAME"), port)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=require TimeZone=Asia/Shanghai", utils.Config("DB_HOST"), utils.Config("DB_USER"), utils.Config("DB_PASSWORD"), utils.Config("DB_NAME"), port)
 
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
@@ -50,30 +50,32 @@ func Connect() {
 
 func runMigrations(db *sqlx.DB) {
 	_, err := db.Exec(`
+-- Ensure questions table is created first
+CREATE TABLE IF NOT EXISTS questions (
+    id SERIAL PRIMARY KEY,  
+    question TEXT NOT NULL,
+    test_case_id INTEGER[],  -- ✅ Changed from UUID[] to INTEGER[]
+    set INT NOT NULL,
+    difficulty VARCHAR(255) NOT NULL
+);
 
-		CREATE TABLE IF NOT EXISTS questions (
-			id UUID PRIMARY KEY,
-			question TEXT NOT NULL,
-			test_case_id UUID[],
-			set INT NOT NULL,
-			difficulty VARCHAR(255) NOT NULL
-		
-		);
-		
-		CREATE TABLE IF NOT EXISTS test_cases (
-			id UUID PRIMARY KEY,
-			input TEXT NOT NULL,
-			output TEXT NOT NULL,
-			question_id UUID REFERENCES questions(id)
-		);
+-- Create test_cases after questions exists
+CREATE TABLE IF NOT EXISTS test_cases (
+    id SERIAL PRIMARY KEY,  -- ✅ Auto-incrementing integer
+    input TEXT NOT NULL,
+    output TEXT NOT NULL,
+    question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE  -- ✅ Ensure questions table exists first
+);
 
-		CREATE TABLE IF NOT EXISTS teams (
-			team_id UUID PRIMARY KEY,
-			team_name VARCHAR(255) NOT NULL,
-			team_members TEXT[] NOT NULL,
-			score INT NOT NULL
-		);
+-- Create teams table
+CREATE TABLE IF NOT EXISTS teams (
+    team_id UUID PRIMARY KEY,
+    team_name VARCHAR(255) NOT NULL,
+    team_members TEXT[] NOT NULL,
+    score INT NOT NULL
+);
 
+	
 	`)
 
 	if err != nil {

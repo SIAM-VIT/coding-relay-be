@@ -9,41 +9,91 @@ func CreateQuestion(question models.Question) error {
 	db := database.DB.Db
 
 	_, err := db.Exec(`
-		INSERT INTO questions (question, test_case_id, set, difficulty)
-		VALUES ($1, $2, $3, $4)`,
-		question.Question, question.TestCaseID, question.Set, question.Difficulty)
+		INSERT INTO questions ( question, set, difficulty)
+		VALUES ($1, $2, $3)`,
+		question.Question, question.Set, question.Difficulty)
 	return err
 }
 
 func GetQuestionsByDifficulty(difficulty string) ([]models.Question, error) {
 	db := database.DB.Db
+	var questionsMap = make(map[uint]*models.Question)
 	var questions []models.Question
 
-	rows, err := db.Query(`SELECT id, question, test_case_id, set, difficulty FROM questions WHERE difficulty = $1`, difficulty)
+	rows, err := db.Query(`
+		SELECT q.id, q.question, q.set, q.difficulty, 
+		       t.id, t.input, t.output, t.question_id
+		FROM questions q
+		LEFT JOIN test_cases t ON q.id = t.question_id
+		WHERE q.difficulty = $1
+	`, difficulty)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var q models.Question
-		err := rows.Scan(&q.ID, &q.Question, &q.TestCaseID, &q.Set, &q.Difficulty)
+		var qID uint
+		var qText string
+		var set uint
+		var diff string
+		var testCaseID *uint
+		var input, output *string
+
+		err := rows.Scan(&qID, &qText, &set, &diff, &testCaseID, &input, &output, &qID)
 		if err != nil {
 			return nil, err
 		}
-		questions = append(questions, q)
+
+		if _, exists := questionsMap[qID]; !exists {
+			questionsMap[qID] = &models.Question{
+				ID:         qID,
+				Question:   qText,
+				Set:        set,
+				Difficulty: diff,
+				TestCases:  []models.TestCases{},
+			}
+		}
+
+		if testCaseID != nil && input != nil && output != nil {
+			questionsMap[qID].TestCases = append(questionsMap[qID].TestCases, models.TestCases{
+				ID:         *testCaseID,
+				Input:      *input,
+				Output:     *output,
+				QuestionID: qID,
+			})
+		}
 	}
+
+	for _, q := range questionsMap {
+		questions = append(questions, *q)
+	}
+
 	return questions, nil
 }
 
 func CreateTestCase(testCase models.TestCases) error {
 	db := database.DB.Db
 
-	_, err := db.Exec(`
+	var newTestCaseID int
+	err := db.QueryRow(`
 		INSERT INTO test_cases (input, output, question_id)
-		VALUES ($1, $2, $3)`,
-		testCase.Input, testCase.Output, testCase.QuestionID)
-	return err
+		VALUES ($1, $2, $3) RETURNING id`,
+		testCase.Input, testCase.Output, testCase.QuestionID).Scan(&newTestCaseID)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`
+		UPDATE questions
+		SET test_case_id = array_append(test_case_id, $1)
+		WHERE id = $2`,
+		newTestCaseID, testCase.QuestionID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func GetAllTestCases() ([]models.TestCases, error) {
