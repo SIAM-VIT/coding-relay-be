@@ -17,4 +17,4 @@ type Question struct {
 	Difficulty string      `json:"difficulty"`
 }
 
-//Post request, difficulty
+//Post request, difficulty based on difficutly 
